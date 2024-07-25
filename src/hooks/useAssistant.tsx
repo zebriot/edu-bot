@@ -47,7 +47,6 @@ const useAssistant = () => {
 
         let run = await openai.beta.threads.runs.create(thread.id, {
           assistant_id: assistantId,
-          model: "gpt-4o",
         });
 
         while (run.status !== "completed") {
