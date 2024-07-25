@@ -1,8 +1,8 @@
 import {useState, useEffect, useCallback} from "react";
 import OpenAI from "openai";
 
-const assistantId = process.env.ASSISTANT_ID || ""; // Replace with your assistant ID
-const apiKey = process.env.API_KEY || ""; // Replace with your OpenAI API key
+const assistantId = process.env.REACT_APP_ASSISTANT_ID || ""; // Replace with your assistant ID
+const apiKey = process.env.REACT_APP_API_KEY || ""; // Replace with your OpenAI API key
 
 const openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
 
