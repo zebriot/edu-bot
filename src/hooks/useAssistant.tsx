@@ -1,5 +1,6 @@
 import {useState, useEffect, useCallback} from "react";
 import OpenAI from "openai";
+import {sleep} from "../utils";
 
 const assistantId = process.env.REACT_APP_ASSISTANT_ID || ""; // Replace with your assistant ID
 const apiKey = process.env.REACT_APP_API_KEY || ""; // Replace with your OpenAI API key
@@ -52,6 +53,7 @@ const useAssistant = () => {
 
         while (run.status !== "completed") {
           run = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+          await sleep(200);
         }
 
         openai.beta.threads.messages
