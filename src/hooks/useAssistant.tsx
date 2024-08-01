@@ -1,11 +1,21 @@
 import {useState, useEffect, useCallback} from "react";
 import OpenAI from "openai";
 import {sleep} from "../utils";
+import axios from "axios";
+import {getQueriesForElement} from "@testing-library/react";
 
 const assistantId = process.env.REACT_APP_ASSISTANT_ID || ""; // Replace with your assistant ID
 const apiKey = process.env.REACT_APP_API_KEY || ""; // Replace with your OpenAI API key
 
 const openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
+
+const API_URL =
+  "https://duxpxzt5wk7h23whbjqluoriwa0gbuec.lambda-url.us-east-1.on.aws";
+
+const Endpoints = {
+  getQuery: "get_query",
+  submitQuery: "submit_query",
+};
 
 type Message = {
   role: "user" | "assistant";
@@ -14,76 +24,72 @@ type Message = {
 
 const useAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [thread, setThread] = useState<OpenAI.Beta.Threads.Thread | null>(null);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to create a new thread
-  const createThread = useCallback(async () => {
+  const getMessage = (queryId: string) => {
+    return axios.get(`${API_URL}/${Endpoints.getQuery}`, {
+      data: {query_id: queryId},
+    });
+  };
+
+  // Function to send a message
+  const sendMessage = useCallback(async (text: string) => {
+    const userMessage: Message = {role: "user", content: text};
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+
     try {
       setLoading(true);
-      const thread = await openai.beta.threads.create();
-      setThread(thread);
-      setMessages([]);
+      const res = await axios.post(`${API_URL}/${Endpoints.submitQuery}`, {
+        data: {query_text: text},
+      });
+
+      if (res.status !== 200) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            role: "assistant" as const,
+            content: "Sorry! Something went wrong!",
+          },
+        ]);
+        return;
+      }
+
+      const queryId = res.data.query_id;
+
+      let response = "";
+
+      while (!response) {
+        const res = await getMessage(queryId);
+        if (res.data?.answer_text) {
+          response = res.data?.answer_text;
+        }
+        await sleep(500);
+      }
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          role: "assistant" as const,
+          content: response,
+        },
+      ]);
+
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      setError("Failed to create thread");
+      setError("Failed to send message");
     }
-  }, [apiKey, assistantId]);
+  }, []);
 
-  // Function to send a message
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!thread) {
-        setError("No thread found");
-        return;
-      }
-      const userMessage: Message = {role: "user", content: text};
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
-
-      try {
-        setLoading(true);
-        await openai.beta.threads.messages.create(thread.id, userMessage);
-
-        let run = await openai.beta.threads.runs.create(thread.id, {
-          assistant_id: assistantId,
-          model: "gpt-4o",
-        });
-
-        while (run.status !== "completed") {
-          run = await openai.beta.threads.runs.retrieve(thread.id, run.id);
-          await sleep(200);
-        }
-
-        openai.beta.threads.messages
-          .list(thread.id)
-          .then(({data: messages}) => {
-            const assistantMessage =
-              messages[0].content[0].type === "text"
-                ? {
-                    role: "assistant" as const,
-                    content: messages[0].content[0].text.value,
-                  }
-                : {
-                    role: "assistant" as const,
-                    content: "I'm sorry, I don't understand that.",
-                  };
-            setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-          });
-
-        setLoading(false);
-      } catch (err) {
-        setLoading(false);
-        setError("Failed to send message");
-      }
-    },
-    [apiKey, thread]
-  );
+  const boilServer = () => {
+    axios.get(`${API_URL}`);
+  };
 
   useEffect(() => {
-    createThread();
-  }, [createThread]);
+    boilServer();
+  }, []);
 
   return {
     messages,
