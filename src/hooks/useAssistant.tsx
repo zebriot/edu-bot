@@ -11,7 +11,6 @@ const openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
 
 const API_URL =
   "https://duxpxzt5wk7h23whbjqluoriwa0gbuec.lambda-url.us-east-1.on.aws";
-
 const Endpoints = {
   getQuery: "get_query",
   submitQuery: "submit_query",
@@ -23,26 +22,30 @@ type Message = {
 };
 
 const useAssistant = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content:
+        "How can I assist you today? What would you like to know about SpringField University?",
+    },
+  ]);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const getMessage = (queryId: string) => {
     return axios.get(`${API_URL}/${Endpoints.getQuery}`, {
-      data: {query_id: queryId},
+      params: {
+        query_id: queryId,
+      },
     });
   };
 
-  // Function to send a message
-  const sendMessage = useCallback(async (text: string) => {
-    const userMessage: Message = {role: "user", content: text};
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
-
+  const processMessage = async (text: string) => {
     try {
       setLoading(true);
       const res = await axios.post(`${API_URL}/${Endpoints.submitQuery}`, {
-        data: {query_text: text},
+        query_text: text,
       });
 
       if (res.status !== 200) {
@@ -65,7 +68,7 @@ const useAssistant = () => {
         if (res.data?.answer_text) {
           response = res.data?.answer_text;
         }
-        await sleep(500);
+        await sleep(1000);
       }
 
       setMessages((prevMessages) => [
@@ -81,6 +84,14 @@ const useAssistant = () => {
       setLoading(false);
       setError("Failed to send message");
     }
+  };
+
+  // Function to send a message
+  const sendMessage = useCallback(async (text: string) => {
+    const userMessage: Message = {role: "user", content: text};
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+
+    processMessage(text);
   }, []);
 
   const boilServer = () => {
@@ -96,6 +107,7 @@ const useAssistant = () => {
     sendMessage,
     loading,
     error,
+    processMessage,
   };
 };
 

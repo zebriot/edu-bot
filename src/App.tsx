@@ -1,11 +1,11 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import useAssistant from "./hooks/useAssistant";
 import "./App.css";
 import ReactMarkdown from "react-markdown";
 
 const App: React.FC = () => {
   const [input, setInput] = useState<string>("");
-  const {messages, sendMessage, loading} = useAssistant();
+  const {messages, sendMessage, loading, processMessage} = useAssistant();
 
   const handleSend = () => {
     if (loading) return;
@@ -24,6 +24,10 @@ const App: React.FC = () => {
       handleSend();
     }
   };
+
+  // useEffect(() => {
+  //   processMessage("Hello! Who are you?");
+  // }, []);
 
   return (
     <div className="app">
