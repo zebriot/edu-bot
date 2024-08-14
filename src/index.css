@@ -31,6 +31,16 @@ code {
   display: flex;
   flex-direction: column;
 }
+.login-form{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4rem;
+}
+
 
 .messages {
   flex: 1;
@@ -77,7 +87,7 @@ code {
   border-top: 1px solid #444;
 }
 
-.input-area input {
+.input-area input,.login-form input {
   flex: 1;
   padding: 10px;
   border: none;
@@ -88,13 +98,13 @@ code {
   transition: background-color 0.3s, border-color 0.3s;
 }
 
-.input-area input:focus {
+.input-area input:focus,.login-form input:focus {
   background-color: #444;
   border: 2px solid #555;
   outline: none;
 }
 
-.input-area button {
+.input-area button,.login-form button {
   padding: 10px 20px;
   background-color: #4a4a4a;
   color: #fff;
@@ -104,6 +114,6 @@ code {
   transition: background-color 0.3s;
 }
 
-.input-area button:hover {
+.input-area button:hover, .login-form button:hover {
   background-color: #5a5a5a;
 }
