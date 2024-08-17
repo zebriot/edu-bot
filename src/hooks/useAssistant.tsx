@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import {sleep} from "../utils";
 import axios from "axios";
 import {getQueriesForElement} from "@testing-library/react";
+import {IUser} from "../App";
 
 const assistantId = process.env.REACT_APP_ASSISTANT_ID || ""; // Replace with your assistant ID
 const apiKey = process.env.REACT_APP_API_KEY || ""; // Replace with your OpenAI API key
@@ -41,11 +42,11 @@ const useAssistant = () => {
     });
   };
 
-  const processMessage = async (text: string) => {
+  const processMessage = async (text: string, user: IUser | null) => {
     try {
       setLoading(true);
       const res = await axios.post(`${API_URL}/${Endpoints.submitQuery}`, {
-        query_text: text,
+        query_text: `I am ${user?.name}, student of ${user?.course}, Please answer the below as per whatever is most relevant to me. ${text} `,
       });
 
       if (res.status !== 200) {
@@ -87,11 +88,11 @@ const useAssistant = () => {
   };
 
   // Function to send a message
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, user: IUser | null) => {
     const userMessage: Message = {role: "user", content: text};
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    processMessage(text);
+    processMessage(text, user);
   }, []);
 
   const boilServer = () => {

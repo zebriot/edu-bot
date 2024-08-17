@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import useAssistant from "./hooks/useAssistant";
 import "./App.css";
 import ReactMarkdown from "react-markdown";
 import LoginForm from "./loginForm";
 
+export type IUser = {name: string; prn: string; course: string};
+
 const App: React.FC = () => {
   const [input, setInput] = useState<string>("");
-  const { messages, sendMessage, loading, processMessage } = useAssistant();
-  const [user, setUser] = useState<{ name: string, prn: string } | null>(null);
+  const {messages, sendMessage, loading, processMessage} = useAssistant();
+  const [user, setUser] = useState<IUser | null>(null);
 
   const handleSend = () => {
     if (loading) return;
     if (input.trim() !== "") {
-      sendMessage(input);
+      sendMessage(input, user);
       setInput("");
     }
   };
@@ -27,7 +29,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogin = (userData: { name: string; prn: string }) => {
+  const handleLogin = (userData: {
+    name: string;
+    prn: string;
+    course: string;
+  }) => {
     setUser(userData);
   };
 
@@ -37,33 +43,31 @@ const App: React.FC = () => {
 
   return (
     <div className="app">
-      {
-        user ? (
-          <div className="chat-window">
-            <div className="messages">
-              {messages.map((message, index) => (
-                <div key={index} className={`message ${message.role}`}>
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
-                </div>
-              ))}
-            </div>
-            <div className="input-area">
-              <input
-                type="text"
-                value={input}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
-              />
-              <button onClick={handleSend} disabled={loading}>
-                {loading ? "Thinking..." : "Send"}
-              </button>
-            </div>
+      {user ? (
+        <div className="chat-window">
+          <div className="messages">
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.role}`}>
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
+            ))}
           </div>
-        ) : (
-          <LoginForm onSubmit={handleLogin}/>
-        )
-      }
+          <div className="input-area">
+            <input
+              type="text"
+              value={input}
+              onChange={handleInputChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+            />
+            <button onClick={handleSend} disabled={loading}>
+              {loading ? "Thinking..." : "Send"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <LoginForm onSubmit={handleLogin} />
+      )}
     </div>
   );
 };
